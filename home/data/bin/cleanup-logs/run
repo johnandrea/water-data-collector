@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Keep no more than 'max' files in the selected location.
+
+here=${0%/*}
+
+statustop=~/data/status
+
+if [ -d "$statustop" ]; then
+  :
+else
+  echo Error: status directory does not exist: $statustop
+  exit 1
+fi
+
+max=24
+
+# each of the subdirectories
+
+for subdir in 01 02 03 04
+do
+  checkdir="$statustop/$subdir"
+
+  if [ -d "$checkdir" ]; then
+
+    n=0
+
+    ls -1t $checkdir/* |
+    while read file; do
+       n=$((n+1))
+       if [[ $n -gt $max ]]; then
+          rm -f "$file"
+       fi
+    done
+
+  else
+    echo Warning: single status directory does not exist: $checkdir
+  fi
+fi
+
+done

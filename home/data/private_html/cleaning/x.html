@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Data Cleaning</title>
+<style>
+th { border-right: 1px solid grey; }
+td { border-top: 1px solid grey; }
+tbody tr:hover { background: #bfffbf; }
+.highlight { font-weight: bold; font-decoration: underline; }
+</style>
+<script>
+function invertAll() {
+  var theForm = document.getElementById('data');
+  var theBoxes = theForm.getElementsByTagName('input');
+  for ( var i=0; i < theBoxes.length; i++) {
+     if ( theBoxes[i].type == "checkbox") {
+        theBoxes[i].checked = ! theBoxes[i].checked;
+     }
+  }
+}
+function setAll( newState ) {
+  var theForm = document.getElementById('data');
+  var theBoxes = theForm.getElementsByTagName('input');
+  for ( var i=0; i < theBoxes.length; i++) {
+     if ( theBoxes[i].type == "checkbox") {
+        theBoxes[i].checked = newState;
+     }
+  }
+}
+</script>
+</head>
+<body>
+<h1>Data Cleaning</h1>
+<form id="data" method="post" action="#">
+Operation on the selection:
+<br><br>
+<label><input name="option" type="radio" value="hide"><span class="highlight">hide all</span>
+data at the selected times; for instance: a tank test.</label>
+<br><br>
+<label><input name="option" type="radio" value="erase"><span class="highlight">erase these</span>
+selected sensor values; for instance: bio-fouling on sensor</label>
+<br><br>
+<input type="hidden" name="sensor" value="temp">
+<table cellpadding="6" cellspacing="0">
+<thead>
+<tr><th>date</th><th>temp</th>
+    <th>select
+	<br><button type="button" onclick="setAll(true)">all</button>
+<br><br>
+        <br><button type="button" onclick="setAll(false)">none</button>
+	<br><button type="button" onclick="invertAll()">invert</button></th></tr>
+</thead>
+<tbody>
+<tr><td><label for="id1">12:37</label></td>
+    <td><label for="id1">25</label></td>
+    <td><input id="id1" type="checkbox" name="c1" value="12:37"></td></tr>
+<tr><td><label for="id2">12:45</label></td>
+    <td><label for="id2">26</label></td>
+    <td><input id="id2" type="checkbox" name="c2" value="12:45"></td></tr>
+<tr><td><label for="id3">12:50</label></td>
+    <td><label for="id3">24</label></td>
+    <td><input id="id3" type="checkbox" name="c3" value="12:50"></td></tr>
+</tbody>
+</table>
+<br><input type="submit" value="Submit">
+</form>
+</body>
+</html>

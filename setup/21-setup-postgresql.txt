@@ -1,0 +1,36 @@
+# https://www.linode.com/docs/databases/postgresql/how-to-install-postgresql-relational-databases-on-centos-7/
+
+$ postgresql-setup initdb
+
+$ systemctl enable postgresql
+$ systemctl start postgresql
+
+Set options and passwords
+
+$ su - postgres
+
+$ psql -d template1 -c "ALTER USER postgres WITH PASSWORD 'newpassword';"
+
+$ cd data
+$ cp pg_hba.conf pg_hba.conf.original
+$ cp postgresql.conf postgresql.conf.original
+
+Edit pg_hba.conf
+comment out ipv6
+change "peer" to "md5"
+change "ident" to "md5"
+
+Edit postgresql.conf
+change logging option from stderr to syslog
+uncomment listen_address and change to '127.0.0.1'
+
+Create a password file, useful for backups, etc
+
+$ cd
+$ echo "*:*:*:postgres:newpassword" > owner.pass
+$ chmod go-rwx owner.pass
+$ exit
+
+Back to superuser at this point
+
+$ systemctl restart postgresql

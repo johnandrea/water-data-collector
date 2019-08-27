@@ -1,0 +1,111 @@
+#!/bin/bash
+
+date
+
+here=${0%/*}
+
+# name each attachment for the site
+# and copy into the archive
+
+indir=~/queue/01-attachments
+outdir=~/queue/02-site-attachments
+archive=~/data/archive
+statusdir=~/data/status/02
+
+if [ -d "$indir" ]; then
+  :
+else
+  echo Error: input directory does not exist: $indir
+  exit 1
+fi
+if [ -d "$outdir" ]; then
+  :
+else
+  echo Error: output directory does not exist: $outdir
+  exit 1
+fi
+if [ -d "$archive" ]; then
+  :
+else
+  echo Error: archive directory does not exist: $archive
+  exit 1
+fi
+if [ -d "$statusdir" ]; then
+  :
+else
+  echo Error: status directory does not exist: $statusdir
+  exit 1
+fi
+
+thispath=$(realpath $0)
+thispath=$(dirname  $thispath)
+thispath=$(basename $thispath | tr -d ' ')
+
+archivetoday=$(~/bin/ensure-dated-directory "$archive")
+if [ $? -eq 0 ]; then
+  if [ "$archivetoday" = "" ]; then
+    echo Error: something wrong with todays archive: $archivetoday
+    exit 1
+  fi
+else
+  echo Error: couldnt create todays archive: $archivetoday
+  exit 1
+fi
+
+find $indir -type f -print |
+while read filename; do
+  #echo $filename
+
+  logger --tag $thispath "located: $filename"
+
+  echo
+  echo
+  ~/bin/wait-for-file.py "$filename"
+
+  # the attachment files begin with storx serial underscore
+  name=$(basename "$filename")
+  serial=$(echo $name | sed 's/_.*//')
+
+  statusfile="$statusdir/$name.log"
+  date > "$statusfile"
+  echo serial $serial >>"$statusfile"
+
+  site=$(~/bin/sitekey-from-storxserial.py ~/bin/config/db.read.config $serial)
+  if [ $? -eq 0 ]; then
+
+    if [ "$site" = "" ]; then
+      echo Warning: no site match for storx $serial
+      echo Warning: no site match for storx $serial >>"$statusfile"
+    else
+
+      # prepend the site key to the filename
+      # underscore is allowed in the key, so that can't a delimiter
+      # colon is not allowed in ntfs files
+      # percent sign will work
+
+      outname="$site%$name"
+
+      # ".raw" file types type get copied into the next queue
+      ext=$(echo $filename | rev | cut -c1-4 | rev)
+      if [ "$ext" = ".raw" ]; then
+         cp "$filename" "$outdir/$outname"
+         logger --tag $thispath "queued: $outname"
+         echo queued "$outdir/$outname" >>"$statusfile"
+      fi
+
+      # original moved into the archive
+      mv "$filename" "$archivetoday/$outname"
+
+      echo Archived to $archivetoday/$outname
+      echo Archived to $archivetoday/$outname >>"$statusfile"
+
+      # record that this has arrived
+      ~/bin/save-storx-email-date.py ~/bin/config/db.write.config "$serial"
+
+    fi
+  else
+    echo Error: unable to check for site name
+    echo Error: unable to check for site name >> $statusfile
+  fi
+
+done

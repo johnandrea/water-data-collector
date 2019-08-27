@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Keep no more than 'max' files in the selected location.
+
+here=${0%/*}
+
+recentcopy=~/data/recent
+
+if [ -d "$recentcopy" ]; then
+  :
+else
+  echo "Error: recent copy directory does not exist"
+  exit 1
+fi
+
+max=24
+
+n=0
+
+ls -1t $recentcopy/* |
+while read file; do
+  n=$((n+1))
+  if [[ $n -gt $max ]]; then
+    rm -f "$file"
+  fi
+done
+

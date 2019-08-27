@@ -1,0 +1,58 @@
+<?php
+ include( "../../not-served/db-config.inc" );
+ include( "../lib/db.inc" );
+ include( "../lib/common.inc" );
+ include( "../lib/web-parameters.inc" );
+ include( "../lib/html-head.html" );
+
+ $params = array();
+ $error = get_web_parameters( "\n", $params );
+
+ if ( $error == "" ) {
+
+    main( $params );
+
+ } else {
+   echo( "ERROR: $error" );
+ }
+
+ include( "../lib/html-tail.html" );
+
+function main( $params ) {
+
+  try {
+     $dbh = connect_for_read();
+     if ( $dbh ) {
+
+       $sensors = array();
+       $sites   = array();
+
+       get_sensors( $dbh, $sensors );
+       get_sites( $dbh, $sites );
+
+       $error = verify_params( "\n", $sites, $sensors, $params );
+       if ( $error == "" ) {
+
+         $start = $params['exact_start'];
+         $end   = $params['exact_end'];
+
+         print_r( $params );
+
+       } else {
+         echo( "ERROR: $error" );
+       }
+
+       $dbh = null;
+
+     } else {
+       echo( "ERROR: Can't connect to database" );
+     }
+
+  } catch (PDOException $e) {
+    echo( "ERROR: Database error" );
+    //echo( $e );
+  }
+
+}
+
+?>

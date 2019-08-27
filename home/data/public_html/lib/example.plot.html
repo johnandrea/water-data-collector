@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Site map</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="js/jquery.min.js"></script>
+<script src="js/jquery-ui/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="js/jquery-ui/jquery-ui.min.css">
+<script src="js/plotly.min.js"></script>
+</head>
+<body>
+<div id="grapharea"></div>
+<script>
+//var options = "modeBarButtonsToRemove: ['sendDataToCloud','toggleSpikelines',
+//              'hoverCompareCartesian','hoverClosestCartesian','toImage' ],
+//              displaylogo: false,
+//              "modeBarButtonsToAdd: [{"
+//    . " name: 'saveImage', icon: Plotly.Icons.camera,"
+//    . " click: function(gd) {"
+//    . " Plotly.downloadImage(gd, {format: 'png', filename: 'savefile.png'})"
+//    . "}"
+//    . "}]";
+//var plotConfiguration = {};
+
+var options = { modeBarButtonsToRemove: [ 'sendDataToCloud',
+                    'toggleSpikelines','hoverCompareCartesian',
+                    'hoverClosestCartesian','toImage' ],
+                displaylogo: false,
+                modeBarButtonsToAdd: [{
+                    name: 'saveImage', icon: Plotly.Icons.camera,
+                    click: function(gd) { Plotly.downloadImage(
+                       gd, {format: 'png', filename: 'savefile'} )}
+                }]
+              };
+var set1 = {
+    x: [ 1,2,3,5],
+    y: [19,11,12,23],
+    name: 'first thing',
+    mode: 'lines+markers',
+    type: 'scatter' };
+var set2 = {
+    x: [ 1,2,4,6],
+    y: [8,11,40,50],
+    name: 'line two',
+    mode: 'lines+markers',
+    type: 'scatter' };
+var graph_layout = { title: 'label', width: 600, height: 400 };
+Plotly.newPlot( 'grapharea', [set1,set2], graph_layout, options );
+</script>
+</body>
+</html>

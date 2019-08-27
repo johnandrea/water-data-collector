@@ -1,0 +1,9 @@
+*/5 * * * * /usr/bin/flock -w 0 $HOME/bin/01-attachments/run.lockfile $HOME/bin/01-attachments/run >$HOME/data/status/01.cron.log 2>&1
+*/4 * * * * /usr/bin/flock -w 0 $HOME/bin/02-site-attachments/run.lockfile $HOME/bin/02-site-attachments/run >$HOME/data/status/02.cron.log 2>&1
+*/6 * * * * /usr/bin/flock -w 0 $HOME/bin/03-extracted/run.lockfile $HOME/bin/03-extracted/run >$HOME/data/status/03.cron.log 2>&1
+*/7 * * * * /usr/bin/flock -w 0 $HOME/bin/04-insert-database/run.lockfile $HOME/bin/04-insert-database/run >$HOME/data/status/04.cron.log 2>&1
+
+30 19 * * * $HOME/bin/cleanup-recent-data/run >$HOME/data/status/cleanup-recent-data.cron.log 2>&1
+30 20 * * * $HOME/bin/cleanup-logs/run >$HOME/data/status/cleanup-logs.cron.log 2>&1
+
+15 23 * * * crontab -l > $HOME/cron.list

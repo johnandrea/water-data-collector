@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<body>
+<?php
+if ( $_FILES['userfile']['error'] === UPLOAD_ERR_OK
+     && is_uploaded_file($_FILES['userfile']['tmp_name']) ) {
+
+  $items = array( "name", "type", "size", "tmp_name" );
+  foreach ( $items as $item ) {
+    echo "<br>$item = " . $_FILES['userfile'][$item];
+  }
+
+  echo '<br>';
+  $data = file_get_contents($_FILES['userfile']['tmp_name']);
+  echo $data;
+
+  echo '<br>';
+  if ( is_json( $data ) ) {
+     echo 'is json';
+     $needed = array();
+     read_data( $data, $needed );
+     echo '<br>';
+     if ( isset( $needed['instrument'] ) && isset( $needed['serial'] ) ) {
+       echo $needed['instrument'] .' '. $needed['serial'];
+       
+     } else {
+       echo 'Missing instrument name and/or serial number';
+     }
+  } else {
+     echo 'not json';
+  }
+
+} else {
+  $message = null;
+  switch( $_FILES['userfile']['error'] ) {
+  case UPLOAD_ERR_INI_SIZE:
+     $message = "The uploaded file exceeds the upload_max_filesize directive in php.ini";
+     break;
+  case UPLOAD_ERR_FORM_SIZE:
+     $message = "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form";
+     break;
+  case UPLOAD_ERR_PARTIAL:
+     $message = "The uploaded file was only partially uploaded";
+     break;
+  case UPLOAD_ERR_NO_FILE:
+    $message = "No file was uploaded";
+    break;
+  case UPLOAD_ERR_NO_TMP_DIR:
+    $message = "Missing a temporary folder";
+    break;
+  case UPLOAD_ERR_CANT_WRITE:
+    $message = "Failed to write file to disk";
+    break;
+  case UPLOAD_ERR_EXTENSION:
+    $message = "File upload stopped by extension";
+    break;
+  default:
+    $message = "Unknown upload error";
+    break;
+  }
+
+  echo $message; 
+}
+
+// ---------------------------
+function read_data( $data, &$items ) {
+  $obj = json_decode( $data, true );
+
+  $needed = array('instrument', 'serial');
+  foreach( $needed as $item ) {
+    $items[$item] = null;
+    if ( isset( $obj[$item] ) ) {
+       if ( trim( $obj[$item] ) != '' ) {
+          $items[$item] = strtolower( $obj[$item] );
+       }
+    }
+  }
+}
+
+// ---------------------------
+function is_json($string) {
+ json_decode($string);
+ return (json_last_error() == JSON_ERROR_NONE);
+}
+
+?>
+</body>
+</html>

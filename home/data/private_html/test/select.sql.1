@@ -1,0 +1,7 @@
+select i.name, c.serial, c.created_at,substring(cast(config as text),12,15)
+from instruments i, framer_configs c
+where i.id = c.instrument_id
+and i.is_usable
+and c.is_usable
+order by c.created_at
+;

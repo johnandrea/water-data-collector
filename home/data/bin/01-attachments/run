@@ -1,0 +1,68 @@
+#!/bin/bash
+
+date
+
+here=${0%/*}
+
+# extract attachments from each email messages
+
+indir=~/Maildir/new
+outdir=~/queue/01-attachments
+statusdir=~/data/status/01
+
+if [ -d "$indir" ]; then
+  :
+else
+  echo Error: input directory does not exist: $indir
+  exit 1
+fi
+if [ -d "$outdir" ]; then
+  :
+else
+  echo Error: output directory does not exist: $outdir
+  exit 1
+fi
+if [ -d "$statusdir" ]; then
+  :
+else
+  echo Error: status directory does not exist: $statusdir
+  exit 1
+fi
+
+thispath=$(realpath $0)
+thispath=$(dirname  $thispath)
+thispath=$(basename $thispath | tr -d ' ')
+
+find $indir -type f -print |
+while read filename; do
+  #echo $filename
+
+  logger --tag $thispath "located: $filename"
+
+  creation=$(~/bin/file-creation-date.sh "$filename")
+
+  # the likelyhood of one storx having multuple files delivered in the
+  # same second is very low, so don't bother using any timestamp smaller
+  # than the file seconds part
+  # the extracted attachments will be named with the storx serial number
+  # found in the messages subject line
+
+  echo
+  echo
+  ~/bin/wait-for-file.py "$filename"
+
+  name=$(basename "$filename")
+
+  statusfile="$statusdir/$name.log"
+
+  date > "$statusfile"
+  echo $filename timestamp $creation >> "$statusfile"
+
+  if $here/extract-attachments.py "$filename" "$outdir" "$creation"
+  then
+     rm -f "$filename"
+     echo completed
+     echo completed >> "$statusfile"
+  fi
+
+done

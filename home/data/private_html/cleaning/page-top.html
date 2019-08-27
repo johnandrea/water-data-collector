@@ -1,0 +1,28 @@
+<span style="font-size: larger;">Operation on the selection:</span>
+<br><br>
+<form id="cleaning_form" method="post" action="./confirm/">
+<div style="border-bottom: 1px solid grey; padding-bottom: 1em;">
+
+<!-- Use a table here to line up the button and the labels -->
+<table>
+<tr>
+  <td><input id="hide" name="action" type="radio" value="hide"></td>
+  <td><label for="hide"><span class="radio_highlight">hide all</span>
+   data at the selected times;
+   <span style="font-style: italic;">for instance: a tank test.</span></label></td>
+</tr>
+<tr>
+  <td><input id="erase" name="action" type="radio" value="erase"></td>
+  <td><label for="erase"><span class="radio_highlight">erase these</span>
+   selected sensor values;
+   <span style="font-style: italic;">for instance: bio-fouling on sensor.</span></label>
+   Note that all the sensors shown here will be erased. You may wish to backup
+   and select fewer sensors.</td>
+</tr>
+</table>
+<br>
+<textarea class="comment-area" placeholder="Comment" name="comment"
+   onfocus="this.placeholder = ''" onblur="this.placeholder = 'Comment'"
+   rows="3" cols="50"></textarea>
+
+</div>

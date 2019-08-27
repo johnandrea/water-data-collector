@@ -1,0 +1,116 @@
+#!/bin/bash
+
+date
+
+here=${0%/*}
+
+indir=~/queue/03-extracted
+tmpdir=~/data/tmp
+statusdir=~/data/status/04
+
+# note the use of $HOME here, might work best with a python path lookup bug
+confpath=$HOME/data/framer-conf
+
+if [ -d "$indir" ]; then
+  :
+else
+  echo Error: input directory does not exist: $indir
+  exit 1
+fi
+if [ -d "$tmpdir" ]; then
+  :
+else
+  echo Error: temp directory does not exist: $tmpdir
+  exit 1
+fi
+if [ -d "$statusdir" ]; then
+  :
+else
+  echo Error: status directory does not exist: $statusdir
+  exit 1
+fi
+if [ -d "$confpath" ]; then
+  :
+else
+  echo Error: configuration path does not exist: $configpath
+  exit 1
+fi
+
+thispath=$(realpath $0)
+thispath=$(dirname  $thispath)
+thispath=$(basename $thispath | tr -d ' ')
+
+find $indir -type f -print |
+grep "dat$" |
+grep second | head -1 |  #debug
+while read filename; do
+  #echo $filename
+
+  logger --tag $thispath "located: $filename"
+
+  echo
+  echo
+  # debug no wait during development
+  #~/bin/wait-for-file.py "$filename"
+
+  # the attachment files begin with site key name
+  # but confirm it
+
+  name=$(basename "$filename")
+  site=$(echo $name | sed 's/%.*//')
+
+  statusfile="$statusdir/$name.log"
+  date >"$statusfile"
+  echo site $site >>"$statusfile"
+
+  siteid=$(~/bin/site-id-from-key.py ~/bin/config/db.read.config $site)
+  if [ $? -eq 0 ]; then
+
+    if [ "$siteid" = "" ]; then
+      echo Warning: no site match for storx $serial
+      echo Warning: no site match for storx $serial >> "$statusfile"
+      # don't delete the file, a secondary process will cleanup
+      # after an extended period
+    else
+
+      echo site id >>"$statusfile"
+
+      outdata="$tmpdir/$name"
+
+      cat "$filename" |
+      ~/bin/framer/fitter.py --configpath="$confpath" "$confpath/all.package" |
+      ~/bin/framer/validator.py --configpath="$confpath" "$confpath/all.package" |
+      ~/bin/framer/reduce-selection.py --configpath="$confpath" "$confpath/all.package" |
+      ~/bin/framer/averager.py > $outdata 2>>"$statusfile"
+      if [ $? -eq 0 ]; then
+
+         cat "$outdata" |
+         $here/write-db.py ~/bin/config/db.write.config "$name" "$siteid" >> "$statusdir/$name.txt" 2>&1
+         if [ $? -eq 0 ]; then
+
+            #debug don't remove file during development
+            #rm -f "$filename"
+
+            echo processed
+            echo processed >>"$statusfile"
+
+            logger --tag $thispath "processed: $filename"
+
+         else
+            echo Error: database insert failed. See status file for details.
+            echo Error: database insert failed >>"$statusfile"
+         fi
+
+      fi
+
+      # the temporary output data is always deleted
+
+      rm -f "$outdata"
+
+    fi
+  else
+    echo Error: unable to check for site name
+    echo Error: unable to check for site name >>"$statusfile"
+  fi
+
+done

@@ -1,0 +1,6 @@
+modify sshd
+remove root login
+add AllowUsers line
+
+change /etc/hosts.allow
+change /etc/hosts.deny

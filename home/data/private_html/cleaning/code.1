@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>test admin</title>
+<style>
+th { border-right: 1px solid grey; }
+td { border-top: 1px solid grey; }
+tbody tr:hover { background: #bfffbf; }
+.highlight { font-weight: bold; font-decoration: underline; }
+</style>
+</head>
+<body>
+<form action="#">
+<input type="hidden" name="sensor" value="temp">
+<table cellpadding="6" cellspacing="0">.
+<thead>
+<tr><th>date</th><th>temp</th>
+    <th>select
+	    <br><button>all</button>
+		<br><button>none</button>
+		<br><button>invert</button></th></tr>
+</thead>
+<tbody>
+<tr><td><label for="id1">12:37</label></td>
+    <td><label for="id1">25</label></td>
+    <td><input id="id1" type="checkbox" name="c1"></input></td></tr>
+<tr><td><label for="id2">12:45</label></td>
+    <td><label for="id2">26</label></td>
+    <td><input id="id2" type="checkbox" name="c2"></input></td></tr>
+<tr><td><label for="id3">12:50</label></td>
+    <td><label for="id3">24</label></td>
+    <td><input id="id3" type="checkbox" name="c3"></input></td></tr>
+</tbody>
+</table>
+<br>
+Operation on the selection:
+<br><br>
+<label><input name="option" type="radio" value="hide"><span class="highlight">hide all</span>
+data at the selected times; for instance: a tank test.</label>
+<br><br>
+<label><input name="option" type="radio" value="erase"><span class="highlight">erase these</span>
+selected sensor values; for instance: bio-fouling on sensor</label>
+<br><br><input type="submit" value="Submit">
+</form>
+</body>
+</html>

@@ -1,0 +1,136 @@
+#!/bin/bash
+
+date
+
+here=${0%/*}
+
+indir=~/queue/02-site-attachments
+outdir=~/queue/03-extracted
+recentcopy=~/data/recent
+statusdir=~/data/status/01
+
+dbread=~/bin/config/db.read.config
+dbwrite=~/bin/config/db.write.config
+
+# note the use of $HOME here, might work best with a python path lookup bug
+
+confpath=$HOME/data/framer-conf
+confpackage="$confpath/all.package"
+
+if [ -d "$indir" ]; then
+  :
+else
+  echo Error: input directory does not exist: $indir
+  exit 1
+fi
+if [ -d "$outdir" ]; then
+  :
+else
+  echo Error: output directory does not exist: $outdir
+  exit 1
+fi
+if [ -d "$recentcopy" ]; then
+  :
+else
+  echo Error: recent copy directory does not exist: $recentcopy
+  exit 1
+fi
+if [ -d "$statusdir" ]; then
+  :
+else
+  echo Error: status directory does not exist: $statusdir
+  exit 1
+fi
+if [ -d "$confpath" ]; then
+  :
+else
+  echo Error: configuration path does not exist: $confpath
+  exit 1
+fi
+
+thispath=$(realpath $0)
+thispath=$(dirname  $thispath)
+thispath=$(basename $thispath | tr -d ' ')
+
+find $indir -type f -print |
+grep "raw$" |
+while read filename; do
+  #echo $filename
+
+  logger --tag $thispath "located: $filename"
+
+  echo
+  echo
+  ~/bin/wait-for-file.py "$filename"
+
+  # the attachment files begin with site key name
+  # but confirm it
+
+  name=$(basename "$filename")
+  site=$(echo $name | sed 's/%.*//')
+
+  statusfile="$statusdir/$name.log"
+
+  date > "$statusfile"
+  echo site $site >>"$statusfile"
+
+  siteid=$(~/bin/site-id-from-key.py $dbread $site)
+  if [ $? -eq 0 ]; then
+
+    if [ "$siteid" = "" ]; then
+      echo Warning: no site match for storx $serial
+      echo Warning: no site match for storx $serial >>"$statusfile"
+      # don't delete the file, a secondary process will cleanup
+      # after an extended period
+    else
+
+      # don't do any file processing if this configuration update fails
+
+      if $here/config-file-changes.py $dbwrite "$configpath" "$confpackage" >>"$statusfile"
+      then
+
+        # can't continue if the configuration files fail tests on contents
+        # below, set the notification for this failure because it is important
+
+        if ~/bin/framer/check-package.py --confpath="$configpath" "$confpackage" >>"$statusfile"
+        then
+
+          ~/bin/remove-notify-for-config-check-fail.py $dbwrite
+
+          datacopy="$recentcopy/$name.dat"
+
+          ~/bin/framer/framer.py --configpath="$confpath" "$confpackage" "$filename" >$datacopy 2>>"$statusfile"
+          if [ $? -eq 0 ]; then
+
+             cp "$datacopy" "$outdir"
+
+             rm -f "$filename"
+
+             echo data extracted
+             echo data extracted >>$statusfile
+             logger --tag $thispath "data extracted: $filename"
+
+          else
+            rm -f "$datacopy"
+            echo extraction failed, check status file for details
+            echo extraction failed >>"$statusfile"
+          fi
+
+        else
+          ~/bin/add-notify-for-config-check-fail.py $dbwrite
+          echo framer config files failed content check
+          echo framer config files failed fontent check >>"$statusfile"
+        fi
+
+      else
+        echo updating framer config files failed
+        echo updating framer config files failed >>"$statusfile"
+      fi
+
+    fi
+  else
+    echo Error: unable to check for site name
+    echo Error: unable to check for site name >>"$statusfile"
+  fi
+
+done

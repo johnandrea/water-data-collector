@@ -1,0 +1,9 @@
+#!/bin/bash
+
+export PGPASSWORD=datadb
+
+#psql -U postgres -d data -f select.sq;
+
+#psql -U postgres -d data -f add-fake-data.sql
+psql -U postgres -d data -f x.sql
+
