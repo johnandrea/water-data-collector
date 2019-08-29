@@ -1,20 +1,48 @@
 #!/usr/local/bin/python3
 
-# Send email is the data configuration files are in error.
+# Send email if the data configuration files are in error. Reducing frequency
+# of the messages over time.
+# And track when the checks are done and sent.
+#
+# Needs write access to database.
 
 import sys
 import os
 import psycopg2
 import smtplib
 from email.message import EmailMessage
+import getpass
 
 # setup a few library files
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append( dir_path + '/../lib/')
 
-from dblib import get_db_settings
+from dblib import get_db_settings, get_system_settings
 
-def send_messages( n, conn, message ):
+def setup_outgoing_message( fqdn ):
+    data = dict()
+
+    data['subject'] = 'Configuration files are not valid'
+
+    data['body'] = ('The data extraction configuratin files on this server'
+                    ' have failed validation.\n\n'
+                    'Check the server status files for details.\n\n'
+                    'Files will remain in the processing queue.'
+                    ' Replacement config files should be uploaded as soon as'
+                    ' possible to allow file processing to resume.')
+
+    data['from'] = getpass.getuser() + '@' + fqdn
+
+    return data
+
+def send_message( conn, fqdn ):
+    contents = setup_outgoing_message( fqdn )
+
+    message = EmailMessage()
+    message['From'] = contents['from']
+    message['Subject'] = contents['subject']
+    message.set_content(contents['body'])
+
     n_email = 0
 
     sql = 'select address from notification_emails where config_checks'
@@ -26,22 +54,17 @@ def send_messages( n, conn, message ):
         n_email = n_email + 1
         address = row[0]
 
-        address = 'jandrea' # debug
-
-        print( 'sending to', address )
-
         message['To'] = address
+        print( 'Config check: sending to', address )
 
-        print( message )
-
-        s = smtplib.SMTP('localhost@localdomain')
+        s = smtplib.SMTP('localhost')
         s.send_message( message )
         s.quit()
 
     cur.close()
 
     if n_email < 1:
-       print( 'No email addresses defined for notification', file=sys.stderr )
+       print( 'Config check: No email addresses defined for notification', file=sys.stderr )
 
 def is_pow_of_2( x ):
     if x <= 0:
@@ -50,10 +73,11 @@ def is_pow_of_2( x ):
        return True
     return math.log2( x ).is_integer()
 
-def get_error_count( conn ):
+def get_hours_since_sent( conn ):
     n = 0
 
-    sql = 'select count(*) from config_notifications where is_failure'
+    sql = ('select extract(hours from now()-max(created_at))'
+           ' from config_notifications where is_sent')
 
     cur = conn.cursor()
     cur.execute( sql )
@@ -64,6 +88,37 @@ def get_error_count( conn ):
     cur.close()
 
     return n
+
+def get_count( conn, flag ):
+    n = 0
+
+    sql = 'select count(*) from config_notifications where %s' % (flag,)
+
+    cur = conn.cursor()
+    cur.execute( sql )
+
+    for row in cur:
+        n = row[0]
+
+    cur.close()
+
+    return n
+
+def update_count( conn, flag ):
+    sql = 'insert into config_notifications (%s) values (true)' % (flag,)
+
+    cur = conn.cursor()
+    cur.execute( sql )
+    cur.close()
+
+def update_send_count( conn ):
+    update_count( conn, 'is_sent' )
+
+def get_error_count( conn ):
+    return get_count( conn, 'is_failure' )
+
+def get_sent_count( conn ):
+    return get_count( conn, 'is_sent' )
 
 if len(sys.argv) < 2:
    print( 'Missing db config file as first parameter', file=sys.stderr )
@@ -87,32 +142,31 @@ db_string = 'dbname=%s user=%s password=%s' % ( db_settings['database'], db_sett
 try:
    dbh = psycopg2.connect( db_string )
 
-   # don't process every time, use powers of 2
+   if get_error_count( dbh ) > 0:
 
-   n = get_error_count( dbh )
+      system_settings = get_system_settings( dbh )
 
-   if is_pow_of_2(n):
-      subject = 'Configuration files are not valid'
-      body    = ('The data extraction configuratin files on this server'
-                 ' have failed validation.\n\n'
-                 ' Check the server status file for details\n\n'
-                 ' A replacement should be uploaded as soon as possible.')
+      if get_sent_count( dbh ) < 1:
+         # first message
+         update_send_count( dbh )
+         send_message( dbh, system_settings['fqdn'] )
+         print( 'Config check: sent first message' )
 
-      print( 'problem count', n )
+      else:
+         # send on a schedule
+         n = get_hours_since_sent( dbh )
 
-      message = EmailMessage()
-      message['From'] = 'do-not-reply@localhost'
-      message['Subject'] = subject
-      message.set_content(body)
+         if is_pow_of_2(n):
+            update_send_count( dbh )
+            send_message( dbh, system_settings['fqdn'] )
 
-      send_messages( n, dbh, message )
+         else:
+            print( 'Config check: problem, but message not sent for count of', n )
 
    else:
-      if n > 0:
-         print( 'problem, but message not sent for count of', n )
-      else:
-         print( 'no problems' )
+     print( 'Config check: no problems' )
 
+   dbh.commit()
    dbh.close()
 
 except Exception as e:

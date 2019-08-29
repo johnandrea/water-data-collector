@@ -38,7 +38,7 @@ try:
 
    cur = dbh.cursor()
 
-   sql = 'delete from config_notifications where is_failure';
+   sql = 'delete from config_notifications)';
 
    cur.execute( sql )
 

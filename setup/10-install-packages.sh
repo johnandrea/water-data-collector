@@ -14,7 +14,7 @@ rpm --erase selinux-policy selinux-policy-targeted
 rpm -q -a | sort > /home/info/rpm.02
 
 yum -y install firewalld tcp_wrappers
-yum -y install bindutils nano nmap lsof telnet ftp tar findutils file
+yum -y install bind-utils nano nmap lsof telnet ftp tar findutils file
 yum -y install dos2unix unix2dos zip unzip zlib wget man-pages logrotate
 yum -y install bc ed set patch rsync vim
 

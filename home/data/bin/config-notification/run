@@ -12,7 +12,7 @@ thispath=$(realpath $0)
 thispath=$(dirname  $thispath)
 thispath=$(basename $thispath | tr -d ' ')
 
-if $here/send-message.py ~/bin/config/db.read.config
+if $here/send-message.py ~/bin/config/db.write.config
 then
-  logger --tag $thispath "notification: sent"
+  logger --tag $thispath "notification: checked"
 fi

@@ -178,7 +178,8 @@ grant select,insert on table notifications to data_writable;
 
 create table config_notifications(
    created_at timestamp without time zone not null default now(),
-   is_failure boolean
+   is_failure boolean,
+   is_sent    boolean
 );
 
 comment on table config_notifications is 'Events about framer configurations';
