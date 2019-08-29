@@ -1,0 +1,18 @@
+#!/bin/bash
+
+date
+
+here=${0%/*}
+
+# send message if necessary
+#
+# this should be run every hour because its an important notification
+
+thispath=$(realpath $0)
+thispath=$(dirname  $thispath)
+thispath=$(basename $thispath | tr -d ' ')
+
+if $here/send-message.py ~/bin/config/db.read.config
+then
+  logger --tag $thispath "notification: sent"
+fi
