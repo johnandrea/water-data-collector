@@ -1,0 +1,27 @@
+After installing software and files
+
+- ensure dns points to host
+- get a mapbox access key and insert into web side code
+
+- set hostname
+- set hostname in postfix
+- set /etc/hosts.allow to restrict ssh
+- set passwords for apache
+- set ip restrictions in apache (optional)
+- start services / reboot
+- setup sites
+	+ name
+	+ lat/lon
+	+ storx
+- setup test site
+	+ not public
+- upload configuration files
+
+- run web side consistency check
+	+ sensor names match data table
+	+ fqdn defined in settings table
+	+ at least one email exists for notifications
+
+- setup cron
+
+- setup backup

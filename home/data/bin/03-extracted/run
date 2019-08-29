@@ -118,17 +118,20 @@ while read filename; do
 
         else
           ~/bin/add-notify-for-config-check-fail.py $dbwrite
-          echo framer config files failed content check
-          echo framer config files failed fontent check >>"$statusfile"
+          logger --tag $thispath "framer config: validity check failed"
+          echo framer config files failed validity check
+          echo framer config files failed validity check >>"$statusfile"
         fi
 
       else
+        logger --tag $thispath "framer config: update failed"
         echo updating framer config files failed
         echo updating framer config files failed >>"$statusfile"
       fi
 
     fi
   else
+    logger --tag $thispath "site name: failed"
     echo Error: unable to check for site name
     echo Error: unable to check for site name >>"$statusfile"
   fi

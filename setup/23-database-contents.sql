@@ -66,3 +66,4 @@ update sensors set notify_limit_low = 8 where name='battery';
 
 -- insert into settings( name,value) values ('website header','This is a test system');
 -- insert into settings( name,value) values ('icon url',null);
+insert into settings (name,value) values ('fqdn',null)
