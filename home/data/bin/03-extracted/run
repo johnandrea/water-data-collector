@@ -121,6 +121,8 @@ while read filename; do
           logger --tag $thispath "framer config: validity check failed"
           echo framer config files failed validity check
           echo framer config files failed validity check >>"$statusfile"
+          # the message won't be sent for every input file, only on a schedule
+          $here/send-message.py "$dbwrite"
         fi
 
       else
