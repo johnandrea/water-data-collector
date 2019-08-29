@@ -30,3 +30,18 @@ def get_db_settings( filename ):
        values['password'] = passwd
 
     return values
+
+def get_system_settings( conn ):
+    data = dict()
+
+    sql = 'select name,value from settings'
+
+    cur = conn.cursor()
+    cur.execute( sql )
+
+    for row in cur:
+        data[row[0]] = row[1]
+
+    cur.close()
+
+    return data
